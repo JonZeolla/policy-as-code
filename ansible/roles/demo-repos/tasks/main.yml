@@ -1,0 +1,67 @@
+---
+- name: Install prereq python packages
+  ansible.builtin.pip:
+    name: python-gitlab
+    state: latest
+
+- name: Retrieve and set external IP
+  when: external_ip is not defined
+  block:
+    - name: Gather EC2 metadata
+      amazon.aws.ec2_metadata_facts:
+
+    - name: Set the external_ip fact to EC2 instance's public IPv4 IP
+      ansible.builtin.set_fact:
+        external_ip: "{{ ansible_ec2_public_ipv4 }}"
+
+- name: Create a demo group
+  community.general.gitlab_group:
+    name: demo
+    api_url: "http://{{ external_ip }}"
+    api_username: root
+    api_password: "{{ root_password }}"
+
+- name: Add a user to a GitLab Group
+  community.general.gitlab_group_members:
+    api_url: "http://{{ external_ip }}"
+    api_username: root
+    api_password: "{{ root_password }}"
+    gitlab_group: demo
+    gitlab_user: root
+    access_level: owner
+    state: present
+
+- name: Create the policy-as-code-demo project
+  community.general.gitlab_project:
+    name: policy-as-code-demo
+    api_url: "http://{{ external_ip }}"
+    api_username: root
+    api_password: "{{ root_password }}"
+    group: demo
+    shared_runners_enabled: true
+    squash_option: always
+
+- name: Setup SSH configs
+  block:
+    - name: Generate SSH key for gitlab
+      community.crypto.openssh_keypair:
+        path: "{{ home_dir }}/.ssh/gitlab"
+
+    - name: Render and copy SSH config
+      ansible.builtin.template:
+        src: config.j2
+        dest: "{{ home_dir }}/.ssh/config"
+        # This is the uid/gid of ec2-user on Amazon Linux 2 (AL2)
+        owner: 1000
+        group: 1000
+
+- name: Clone the policy-as-code-demo repo
+  ansible.builtin.git:
+    repo: https://github.com/JonZeolla/policy-as-code-demo.git
+    dest: "{{ home_dir }}/environment/policy-as-code-demo"
+    # Clone all of the branches
+    refspec: +refs/archive/*:refs/archive/*
+
+- name: Login
+  debug:
+    msg: "You can now log into GitLab at http://{{ external_ip }} with username root and password {{ root_password }}"
