@@ -55,12 +55,21 @@
         owner: 1000
         group: 1000
 
-- name: Clone the policy-as-code-demo repo
-  ansible.builtin.git:
-    repo: https://github.com/JonZeolla/policy-as-code-demo.git
-    dest: "{{ home_dir }}/environment/policy-as-code-demo"
-    # Clone all of the branches
-    refspec: +refs/archive/*:refs/archive/*
+- name: Setup policy-as-code-demo repo
+  block:
+    - name: Clone policy-as-code-demo
+      ansible.builtin.git:
+        repo: https://github.com/JonZeolla/policy-as-code-demo.git
+        dest: "{{ home_dir }}/environment/policy-as-code-demo"
+        # Make sure we fetch all of the branches
+        refspec: +refs/heads/*:refs/heads/*
+
+    - name: Update the policy-as-code-demo origin
+      ansible.builtin.git:
+        repo: "ssh://git@{{ external_ip }}:2222/demo/policy-as-code-demo.git"
+        dest: "{{ home_dir }}/environment/policy-as-code-demo"
+        remote: origin
+        clone: false
 
 - name: Login
   debug:
