@@ -17,3 +17,8 @@ docker run -e C9_PROJECT -e CLIENT_IP -e HOST_USER="${USER}" --network host -v ~
 ## Customizing
 
 If you need to pass custom arguments to the `ansible-playbook` command in the `entrypoint.sh`, pass in the arguments as an env var named `ANSIBLE_CUSTOM_ARGS`
+
+## Updating
+
+Standard updates are automated to run twice a week and open a PR if anything changes (via `task update`). If you need to rebase the branches of any related demo
+repos (as defined under `hack/demo-repos.yml`) then run `task update-demo-repos`

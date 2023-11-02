@@ -1,0 +1,10 @@
+---
+repos:
+  - name: policy-as-code-demo
+    url: https://github.com/jonzeolla/policy-as-code-demo
+    branch-structure:
+      - main:
+          - feat/iac
+          - policy/dockerfile
+      - feat/iac:
+          - policy/iac
