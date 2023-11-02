@@ -31,7 +31,9 @@ COPY lab-resources /etc/app/lab-resources
 # A privileged user is necessary in order to build and to run the entrypoint
 # hadolint ignore=DL3002
 USER root
-RUN ansible-galaxy collection install /etc/app/lab-resources/ -p ansible/jonzeolla/ \
+RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/labs \
+ && ansible-galaxy collection install ./jonzeolla-labs-*.tar.gz \
+ && rm ./jonzeolla-labs-*.tar.gz \
  && ansible-galaxy collection install "amazon.aws:<7.0.0" \
  && ansible-galaxy collection install "community.crypto:<3.0.0" \
  && ansible-galaxy collection install "community.docker:<4.0.0" \
