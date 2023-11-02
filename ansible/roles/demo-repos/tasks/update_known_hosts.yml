@@ -1,0 +1,14 @@
+---
+- name: Read each SSH public key and add it to known hosts
+  ansible.builtin.slurp:
+    src: "{{ public_key }}"
+  register: ssh_public_key
+
+- name: Extract the SSH public key's content
+  ansible.builtin.set_fact:
+    ssh_public_key_content: "{{ ssh_public_key.content | b64decode }}"
+
+- name: Add each public key to known_hosts
+  ansible.builtin.known_hosts:
+    name: "[{{ external_ip }}]:2222"
+    key: "[{{ external_ip }}]:2222 {{ ssh_public_key_content }}"

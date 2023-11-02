@@ -31,6 +31,7 @@
     access_level: owner
     state: present
 
+# Attempted to use import_url but kept getting 422 even after following https://docs.gitlab.com/ee/user/project/import/github.html#prerequisites
 - name: Create the policy-as-code-demo project
   community.general.gitlab_project:
     name: policy-as-code-demo
@@ -41,7 +42,13 @@
     shared_runners_enabled: true
     squash_option: always
 
-- name: Setup SSH configs
+- name: Check if we've already setup the root SSH keys
+  ansible.builtin.stat:
+    path: /tmp/gitlab_keys
+  register: gitlab_key_info
+
+- name: Setup root SSH keys
+  when: not gitlab_key_info.stat.exists
   block:
     - name: Generate SSH key for gitlab
       community.crypto.openssh_keypair:
@@ -55,13 +62,67 @@
         owner: 1000
         group: 1000
 
-- name: Clone the policy-as-code-demo repo
-  ansible.builtin.git:
-    repo: https://github.com/JonZeolla/policy-as-code-demo.git
-    dest: "{{ home_dir }}/environment/policy-as-code-demo"
-    # Clone all of the branches
-    refspec: +refs/archive/*:refs/archive/*
+    - name: Read SSH public key
+      ansible.builtin.slurp:
+        src: "{{ home_dir }}/.ssh/gitlab.pub"
+      register: root_public_key
+
+    - name: Attach the SSH public key to the root user in GitLab
+      community.general.gitlab_user:
+        api_url: "http://{{ external_ip }}"
+        api_username: root
+        api_password: "{{ root_password }}"
+        username: "root"
+        name: "root"
+        email: "root@example.local"
+        sshkey_name: "Auto created SSH key"
+        sshkey_file: "{{ root_public_key.content | b64decode }}"
+
+    - name: Flag SSH setup as successful
+      ansible.builtin.file:
+        path: /tmp/gitlab_keys
+        state: touch
+
+- name: Check if we've already mirrored policy-as-code-demo into GitLab
+  ansible.builtin.stat:
+    path: /tmp/gitlab_mirror
+  register: gitlab_mirror_info
+
+- name: Mirror the policy-as-code-demo repo into GitLab
+  when: not gitlab_mirror_info.stat.exists
+  block:
+    - name: List the GitLab SSH public keys
+      ansible.builtin.find:
+        paths: "{{ home_dir }}/gitlab/etc/"
+        patterns: "*.pub"
+      register: ssh_pub_keys
+
+    - name: Update known_hosts for each discovered server SSH public key
+      ansible.builtin.include_tasks: update_known_hosts.yml
+      with_items: "{{ ssh_pub_keys.files | map(attribute='path') | list }}"
+      loop_control:
+        loop_var: public_key
+
+    # Using command instead of ansible.builtin.git due to issues cloning w/refspec and hanging after updating remotes (even though it succeeded)
+    - name: Mirror policy-as-code-demo locally
+      ansible.builtin.command:
+        cmd: "git clone --mirror https://github.com/JonZeolla/policy-as-code-demo.git {{ home_dir }}/environment/policy-as-code-demo"
+
+    - name: Setup the gitlab remote
+      ansible.builtin.command:
+        cmd: "git remote add gitlab ssh://git@{{ external_ip }}:2222/demo/policy-as-code-demo.git"
+        chdir: "{{ home_dir }}/environment/policy-as-code-demo"
+
+    - name: Push the mirror to gitlab
+      ansible.builtin.command:
+        cmd: "git push --mirror gitlab --force"
+        chdir: "{{ home_dir }}/environment/policy-as-code-demo"
+
+    - name: Flag mirror as successful
+      ansible.builtin.file:
+        path: /tmp/gitlab_mirror
+        state: touch
 
 - name: Login
-  debug:
+  ansible.builtin.debug:
     msg: "You can now log into GitLab at http://{{ external_ip }} with username root and password {{ root_password }}"
