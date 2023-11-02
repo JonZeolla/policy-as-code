@@ -3,7 +3,6 @@
 
 # Except the runtime requirements
 !policy-as-code.yml
-!askpass.sh
 !entrypoint.sh
 !vars/**
-!ansible/roles/**
+!ansible/**
