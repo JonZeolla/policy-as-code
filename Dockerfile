@@ -26,11 +26,12 @@ LABEL org.opencontainers.image.licenses="NONE"
 ARG SILENT="true"
 ENV SILENT="${SILENT}"
 
-ARG LAB_RESOURCES_VERSION
+COPY lab-resources /etc/app/lab-resources
+
 # A privileged user is necessary in order to build and to run the entrypoint
 # hadolint ignore=DL3002
 USER root
-RUN ansible-galaxy collection install git+https://github.com/jonzeolla/lab-resources#/ansible/jonzeolla/,v${LAB_RESOURCES_VERSION} \
+RUN ansible-galaxy collection install /etc/app/lab-resources/ -p ansible/jonzeolla/ \
  && ansible-galaxy collection install "amazon.aws:<7.0.0" \
  && ansible-galaxy collection install "community.crypto:<3.0.0" \
  && ansible-galaxy collection install "community.docker:<4.0.0" \
