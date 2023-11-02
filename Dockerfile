@@ -46,7 +46,6 @@ RUN ansible-galaxy collection install git+https://github.com/jonzeolla/lab-resou
 ENV ANSIBLE_ROLES_PATH="${ANSIBLE_ROLES_PATH}:/etc/app/ansible/roles/"
 
 COPY policy-as-code.yml /etc/app/policy-as-code.yml
-COPY askpass.sh /usr/local/bin/askpass.sh
 COPY vars /etc/app/vars
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY ansible/roles/ /etc/app/ansible/roles/

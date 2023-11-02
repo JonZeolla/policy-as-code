@@ -44,13 +44,10 @@ if [[ -s "${KEY_FILE}" ]]; then
   echo "${KEY_FILE} already exists! Skipping SSH key setup..."
   echo "See ${LOG_FILE} for previous configuration details"
 else
-  #SSH_PASS=$(LC_ALL=C tr -dc 'A-Za-z0-9!#$%&\()*+,-./:;<=>?@[\]^_{|}~' </dev/urandom | head -c 50)
   SSH_PASS=""
   export SSH_PASS
   echo "Generated passphrase: ${SSH_PASS:-empty}" >> "${LOG_FILE}"
   ssh-keygen -N "${SSH_PASS}" -C "Ansible key" -f "${KEY_FILE}" | tee -a "${LOG_FILE}"
-  #eval "$(ssh-agent -s)" | tee -a "${LOG_FILE}"
-  #DISPLAY=1 SSH_ASKPASS=/usr/local/bin/askpass.sh ssh-add "${KEY_FILE}" < /dev/null | tee -a "${LOG_FILE}"
 
   cat "${KEY_FILE}.pub" >> "${HOME}/.ssh/authorized_keys"
   echo "Updated ${HOME}/.ssh/authorized_keys" | tee -a "${LOG_FILE}"
