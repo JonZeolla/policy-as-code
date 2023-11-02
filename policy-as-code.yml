@@ -2,15 +2,9 @@
 - name: Policy as Code
   gather_facts: true
   hosts: all
-  vars:
-    lab_resources_version: 1.0.0
   vars_files:
     - vars/global_vars.yml
   tasks:
-    - name: Setup Cloud9
-      ansible.builtin.include_role:
-        name: jonzeolla.labs.cloud9
-
     - name: Setup GitLab w/Runners
       ansible.builtin.include_role:
         name: jonzeolla.labs.gitlab_runner

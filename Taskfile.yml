@@ -176,8 +176,6 @@ tasks:
         sh: git rev-parse --short HEAD
       REPO_TAGS:
         sh: git tag -l
-      LAB_RESOURCES_VERSION:
-        sh: yq '.[].vars.lab_resources_version' < "{{.REPO_NAME}}.yml"
       BUILD_VERSION:
         sh: |
           pipenv run python -c '
@@ -196,7 +194,7 @@ tasks:
           print(build_version)'
       IMAGE_AND_TAG: '{{.IMAGE_AND_TAG_BASE}}-{{.BUILD_VERSION}}'
       OUTPUT_FILE: '{{.IMAGE_AND_TAG | replace "/" "_" | replace "-" "_" | replace ":" "_"}}_{{.PLATFORM | replace "/" "_" | replace "," "_"}}.tar'
-      DOCKER_BUILDX_FINAL_ARGS: '{{if .DOCKER_BUILDX_CUSTOM_ARGS}}{{.DOCKER_BUILDX_CUSTOM_ARGS}}{{else}}--build-arg LAB_RESOURCES_VERSION="{{.LAB_RESOURCES_VERSION}}"{{end}}'
+      DOCKER_BUILDX_FINAL_ARGS: '{{if .DOCKER_BUILDX_CUSTOM_ARGS}}{{.DOCKER_BUILDX_CUSTOM_ARGS}}{{else}}{{end}}'
       DOCKER_BUILDX_FINAL_CONTEXT: '{{.DOCKER_BUILDX_CUSTOM_CONTEXT | default "."}}'
       DOCKER_BUILDX_FINAL_TAGS: '{{if .DOCKER_BUILDX_CUSTOM_TAGS}}{{.DOCKER_BUILDX_CUSTOM_TAGS}}{{else}}--tag "{{.IMAGE_AND_TAG_BASE}}" --tag "{{.IMAGE_AND_TAG}}"{{end}}'
       DOCKER_BUILDX_FINAL_BUILDARGS: '{{if .DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{.DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{else}}--build-arg VERSION="{{.BUILD_VERSION}}" --build-arg COMMIT_HASH="{{.COMMIT_HASH}}"{{end}}'
