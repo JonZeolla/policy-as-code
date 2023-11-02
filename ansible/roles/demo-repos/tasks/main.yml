@@ -91,9 +91,9 @@
 - name: Mirror the policy-as-code-demo repo into GitLab
   when: not gitlab_mirror_info.stat.exists
   block:
-    - name: List the server SSH public keys
+    - name: List the GitLab SSH public keys
       ansible.builtin.find:
-        paths: /etc/ssh
+        paths: "{{ home_dir }}/gitlab/etc/"
         patterns: "*.pub"
       register: ssh_pub_keys
 
