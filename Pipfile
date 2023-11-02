@@ -6,8 +6,10 @@ name = "pypi"
 [packages]
 
 [dev-packages]
-pre-commit = "*"
 bumpversion = "*"
+gitpython = "*"
+pre-commit = "*"
+pyyaml = "*"
 
 [requires]
 python_version = "3.12"
