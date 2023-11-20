@@ -118,6 +118,12 @@
         cmd: "git push --mirror gitlab --force"
         chdir: "{{ home_dir }}/environment/policy-as-code-demo"
 
+    # Since we use --mirror, the repo is bare and not very useful to retain locally. Either clone it or use the GitLab Web IDE
+    - name: Cleanup the repo
+      ansible.builtin.command:
+        cmd: "rm -rf policy-as-code-demo"
+        chdir: "{{ home_dir }}/environment"
+
     - name: Flag mirror as successful
       ansible.builtin.file:
         path: /tmp/gitlab_mirror
