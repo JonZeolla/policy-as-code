@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG EASY_INFRA_VERSION=2023.10.06
+ARG EASY_INFRA_VERSION=2023.11.05
 # TARGETPLATFORM is special cased by docker and doesn't need an inital ARG; if you plan to use it repeatedly you must add ARG TARGETPLATFORM between uses
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 FROM --platform=$TARGETPLATFORM seiso/easy_infra:${EASY_INFRA_VERSION}-ansible AS base
@@ -34,13 +34,12 @@ USER root
 RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/labs \
  && ansible-galaxy collection install ./jonzeolla-labs-*.tar.gz \
  && rm ./jonzeolla-labs-*.tar.gz \
- && ansible-galaxy collection install "amazon.aws:<7.0.0" \
- && ansible-galaxy collection install "community.crypto:<3.0.0" \
- && ansible-galaxy collection install "community.docker:<4.0.0" \
- # See breaking changes for ansible 2.10 in https://github.com/ansible-collections/community.general/releases/tag/8.0.0
- && ansible-galaxy collection install "community.general:<8.0.0" \
+ && ansible-galaxy collection install "amazon.aws" \
+ && ansible-galaxy collection install "community.crypto" \
+ && ansible-galaxy collection install "community.docker" \
+ && ansible-galaxy collection install "community.general" \
  && curl https://get.docker.com -o get-docker.sh \
- # Avoid setting the VERSION env var in get-docker.sh
+ # Avoid setting the VERSION env var during get-docker.sh
  && unset VERSION \
  && bash ./get-docker.sh \
  && rm get-docker.sh \
