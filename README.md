@@ -11,7 +11,7 @@ export CLIENT_IP=X.X.X.X # TODO: Replace this with your IP
 Now, run the lab setup container.
 
 ```bash
-docker run -e C9_PROJECT -e CLIENT_IP -e HOST_USER="${USER}" --network host -v ~/logs:/root/logs -v ~/.ssh:/root/.ssh jonzeolla/labs:policy-as-code
+docker run -e CLIENT_IP -e HOST_USER="${USER}" --network host -v ~/logs:/root/logs -v ~/.ssh:/root/.ssh jonzeolla/labs:policy-as-code
 ```
 
 ## Customizing

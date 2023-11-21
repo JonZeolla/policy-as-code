@@ -3,7 +3,9 @@
 
 # Except the runtime requirements
 !policy-as-code.yml
+!requirements.yml
 !entrypoint.sh
+
 !vars/**
 !ansible/**
 !lab-resources/**
