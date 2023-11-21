@@ -1,0 +1,14 @@
+---
+collections:
+  - name: amazon.aws
+    version: "<8.0.0"
+    source: https://galaxy.ansible.com
+  - name: community.crypto
+    version: "<3.0.0"
+    source: https://galaxy.ansible.com
+  - name: community.docker
+    version: "<4.0.0"
+    source: https://galaxy.ansible.com
+  - name: community.general
+    version: "<9.0.0"
+    source: https://galaxy.ansible.com

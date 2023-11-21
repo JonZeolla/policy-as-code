@@ -27,6 +27,7 @@ ARG SILENT="true"
 ENV SILENT="${SILENT}"
 
 COPY lab-resources /etc/app/lab-resources
+COPY requirements.yml /etc/app/requirements.yml
 
 # A privileged user is necessary in order to build and to run the entrypoint
 # hadolint ignore=DL3002
@@ -34,10 +35,7 @@ USER root
 RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/labs \
  && ansible-galaxy collection install ./jonzeolla-labs-*.tar.gz \
  && rm ./jonzeolla-labs-*.tar.gz \
- && ansible-galaxy collection install "amazon.aws" \
- && ansible-galaxy collection install "community.crypto" \
- && ansible-galaxy collection install "community.docker" \
- && ansible-galaxy collection install "community.general" \
+ && ansible-galaxy collection install -r /etc/app/requirements.yml \
  && curl https://get.docker.com -o get-docker.sh \
  # Avoid setting the VERSION env var during get-docker.sh
  && unset VERSION \
