@@ -394,7 +394,6 @@ tasks:
                -o spdx-json=sbom.${base_name}.spdx.json \
                -o cyclonedx-json=sbom.${base_name}.cyclonedx.json
 
-
   vulnscan:
     desc: Vuln scan the SBOM
     vars:

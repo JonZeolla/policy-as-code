@@ -44,9 +44,10 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
  && mkdir -p "${HOME}/logs"
 
 ENV ANSIBLE_ROLES_PATH="${ANSIBLE_ROLES_PATH}:/etc/app/ansible/roles/"
+COPY ansible/roles/ /etc/app/ansible/roles/
 
 COPY policy-as-code.yml /etc/app/policy-as-code.yml
 COPY vars /etc/app/vars
+
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY ansible/roles/ /etc/app/ansible/roles/
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
