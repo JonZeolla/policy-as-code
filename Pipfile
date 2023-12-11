@@ -4,6 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+requests = "*"
 
 [dev-packages]
 bumpversion = "*"
@@ -12,4 +13,4 @@ pre-commit = "*"
 pyyaml = "*"
 
 [requires]
-python_version = "3.12"
+python_version = "3.11"

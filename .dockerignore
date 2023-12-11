@@ -1,11 +1,15 @@
 # Ignore everything
 **
 
-# Except the runtime requirements
-!policy-as-code.yml
-!requirements.yml
-!entrypoint.sh
-
+# Except the build requirements
+!Pipfile
+!Pipfile.lock
 !vars/**
 !ansible/**
 !lab-resources/**
+
+# and the runtime requirements
+!policy-as-code.yml
+!requirements.yml
+!entrypoint.sh
+!valid_ip.py

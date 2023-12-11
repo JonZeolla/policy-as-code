@@ -11,31 +11,28 @@ set -o pipefail
 # Don't turn on errexit to ensure we see the logs from failed ansible-playbooks attempts
 #set -o errexit
 
-function valid_ip()
-{
-  local ip=$1
-  local status=1
+# Allow people to set a CLIENT_IP environment variable to skip the prompt
+/usr/src/app/valid_ip.py
+valid_ip_status=$?
 
-  # Naive IP validation first
-  if [[ $ip =~ ^[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}$ ]]; then
-    _IFS=$IFS
-    IFS='.'
+while [[ ${valid_ip_status} -ne 0 ]]; do
+  case $valid_ip_status in
+    # A status of 3 is no IP was provided
+    3) prompt="What does http://icanhazip.com/ipv4 show is your IP? " ;;
+    # A status of 4 is an invalid IP
+    4) prompt="The provided IP was invalid. What does http://icanhazip.com/ipv4 show? " ;;
+    # A status of 5 is a private IP
+    5) prompt="You provided a private IP; please use your public IP. What does http://icanhazip.com/ipv4 show? " ;;
+    # A status of 6 is a Cloud9 IP address; they chose the wrong one
+    6) prompt="You provided a Cloud9 public IP address, please provide your source computer's IP. What does http://icanhazip.com/ipv4 show? " ;;
+  esac
 
-    # Turn ip into an array
-    ip=($ip)
-    IFS=$_IFS
-
-    # Detailed IP validation
-    [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
-    status=$?
-  fi
-  return $status
-}
-
-if ! valid_ip "${CLIENT_IP:-}"; then
-  echo "CLIENT_IP must be set to a valid IP address; it was ${CLIENT_IP:-not set}"
-  exit 1
-fi
+  # CLIENT_IP is used by valid_ip.py
+  read -r -p "${prompt}" CLIENT_IP
+  export CLIENT_IP
+  /usr/src/app/valid_ip.py
+  valid_ip_status=$?
+done
 
 # Setup ansible prereqs
 export KEY_FILE="${HOME}/.ssh/ansible_key"
