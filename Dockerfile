@@ -9,6 +9,8 @@ ARG TARGETARCH
 
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=1
 
 ARG VERSION
 ARG COMMIT_HASH
@@ -43,11 +45,33 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
  && rm get-docker.sh \
  && mkdir -p "${HOME}/logs"
 
+
+FROM base AS python
+
+WORKDIR /tmp
+COPY Pipfile Pipfile.lock ./
+# Install pip -> pipenv
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3-pip \
+                                               python3-venv \
+ && python3 -m venv /tmp/venv \
+ && /tmp/venv/bin/pip3 install --upgrade pipenv
+# Install rntime dependencies; multi-run is used to improve caching
+RUN PIP_IGNORE_INSTALLED=1 \
+    PIPENV_VENV_IN_PROJECT=true \
+    /tmp/venv/bin/pipenv install --deploy --ignore-pipfile
+
+
+FROM base AS final
+
+WORKDIR /usr/src/app
+ENV PATH="/usr/src/app/.venv/bin:${PATH}"
+COPY --from=python /tmp/.venv .venv
+COPY ./valid_ip.py /usr/src/app/valid_ip.py
+
 ENV ANSIBLE_ROLES_PATH="${ANSIBLE_ROLES_PATH}:/etc/app/ansible/roles/"
 COPY ansible/roles/ /etc/app/ansible/roles/
-
 COPY policy-as-code.yml /etc/app/policy-as-code.yml
 COPY vars /etc/app/vars
-
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
