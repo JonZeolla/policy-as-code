@@ -14,7 +14,7 @@ vars:
     sh: echo "$(basename "$(git rev-parse --show-toplevel)")"
   IMAGE_AND_TAG_BASE:
     sh: echo "{{.IMAGE_NAME}}:{{.REPO_NAME}}"
-  PYTHON_VERSION: 3.12
+  PYTHON_VERSION: 3.11
   SUPPORTED_PLATFORMS: 'linux/amd64,linux/arm64'
   VERSION:
     sh: cat '{{.ROOT_DIR}}/VERSION'
