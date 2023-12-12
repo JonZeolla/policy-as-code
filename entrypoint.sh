@@ -11,9 +11,26 @@ set -o pipefail
 # Don't turn on errexit to ensure we see the logs from failed ansible-playbooks attempts
 #set -o errexit
 
+# Support Ctrl+C (SIGINT)
+sigint_handler() {
+  exit 1
+}
+
+trap 'sigint_handler' SIGINT
+
 # Allow people to set a CLIENT_IP environment variable to skip the prompt
 /usr/src/app/valid_ip.py
 valid_ip_status=$?
+
+# [ -t 0 ] checks to see if fd 0 (stdin) is a TTY
+if [ ! -t 0 ] && [[ ${valid_ip_status} -ne 0 ]]; then
+  if [[ "${CLIENT_IP:-empty}" == "empty" ]]; then
+    echo "No TTY and no CLIENT_IP provided; unable to prompt for IP address" >&2
+  else
+    echo "No TTY and an invalid CLIENT_IP was provided; unable to prompt for IP address" >&2
+  fi
+  exit 1
+fi
 
 while [[ ${valid_ip_status} -ne 0 ]]; do
   case $valid_ip_status in
