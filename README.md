@@ -5,7 +5,7 @@
 Run the lab setup container.
 
 ```bash
-docker run -it --network host -v ~/logs:/root/logs -v ~/.ssh:/root/.ssh jonzeolla/labs:policy-as-code
+docker run -it --network host -v /:/host jonzeolla/labs:policy-as-code
 ```
 
 You'll be prompted to provide your IP, and setup will continue automatically from there.

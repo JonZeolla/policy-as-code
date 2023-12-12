@@ -42,8 +42,7 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
  # Avoid setting the VERSION env var during get-docker.sh
  && unset VERSION \
  && bash ./get-docker.sh \
- && rm get-docker.sh \
- && mkdir -p "${HOME}/logs"
+ && rm get-docker.sh
 
 
 FROM base AS python
