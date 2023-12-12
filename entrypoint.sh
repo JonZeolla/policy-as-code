@@ -11,6 +11,14 @@ set -o pipefail
 # Don't turn on errexit to ensure we see the logs from failed ansible-playbooks attempts
 #set -o errexit
 
+# Support Ctrl+C (SIGINT)
+sigint_handler() {
+  echo "Ctrl+C detected, exiting..."
+  exit 1
+}
+
+trap 'sigint_handler' SIGINT
+
 # Allow people to set a CLIENT_IP environment variable to skip the prompt
 /usr/src/app/valid_ip.py
 valid_ip_status=$?
