@@ -74,13 +74,13 @@ else
   echo "Generated passphrase: ${SSH_PASS:-empty}" >> "${LOG_FILE}"
   ssh-keygen -N "${SSH_PASS}" -C "Ansible key" -f "${KEY_FILE}" | tee -a "${LOG_FILE}"
 
-  authorized_keys="${HOST_HOME_DIR}/.ssh/authorized_keys"
-  cat "${KEY_FILE}.pub" >> "${authorized_keys}"
-  echo "Updated ${authorized_keys}" | tee -a "${LOG_FILE}"
+  AUTHORIZED_KEYS="${HOST_HOME_DIR}/.ssh/authorized_keys"
+  cat "${KEY_FILE}.pub" >> "${AUTHORIZED_KEYS}"
+  echo "Updated ${AUTHORIZED_KEYS}" | tee -a "${LOG_FILE}"
 
-  known_hosts="${HOST_HOME_DIR}/.ssh/known_hosts"
-  ssh-keyscan localhost 2>/dev/null >> "${known_hosts}"
-  echo "Updated ${known_hosts}" | tee -a "${LOG_FILE}"
+  KNOWN_HOSTS="${HOST_HOME_DIR}/.ssh/known_hosts"
+  ssh-keyscan localhost 2>/dev/null >> "${KNOWN_HOSTS}"
+  echo "Updated ${KNOWN_HOSTS}" | tee -a "${LOG_FILE}"
 fi
 
 # Don't take the host's ~/.ssh/config into account, since we will change it as a part of the playbook
