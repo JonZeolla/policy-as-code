@@ -218,6 +218,15 @@ tasks:
       - '{{if eq .PLATFORM .LOCAL_PLATFORM}}exit 1{{end}}'
     cmds:
       - 'docker run {{.IMAGE_AND_TAG_BASE}} ansible-playbook --version'
+      # Test valid IP
+      - 'container_id=$(docker run -d -e CLIENT_IP=1.1.1.1 {{.IMAGE_AND_TAG_BASE}}) && sleep 5 && docker kill ${container_id} >/dev/null'
+      - 'echo "Passed test when provided a valid CLIENT_IP"'
+      # Test private IP, no TTY
+      - 'docker run -e CLIENT_IP=192.168.1.1 {{.IMAGE_AND_TAG_BASE}} 2>/dev/null || exit=$?; if [[ $exit -eq 1 ]]; then exit 0; else exit 1; fi'
+      - 'echo "Passed test when provided an invalid CLIENT_IP with no TTY"'
+      # Test no IP, no TTY
+      - 'docker run -e CLIENT_IP= {{.IMAGE_AND_TAG_BASE}} 2>/dev/null || exit=$?; if [[ $exit -eq 1 ]]; then exit 0; else exit 1; fi'
+      - 'echo "Passed test when provided no CLIENT_IP with no TTY"'
 
   clean:
     desc: Clean up build artifacts, cache files/directories, temp files, etc.
