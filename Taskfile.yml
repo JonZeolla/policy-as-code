@@ -207,10 +207,6 @@ tasks:
 
   test:
     desc: Run the project tests
-    env:
-      INPUT_DISABLE_MYPY: '{{.INPUT_DISABLE_MYPY}}'
-      INPUT_EXCLUDE: '{{.INPUT_EXCLUDE}}'
-      INPUT_LOG_LEVEL: "{{.CLI_ARGS}}"
     vars:
       PLATFORM: '{{if eq .PLATFORM "all"}}{{.SUPPORTED_PLATFORMS}}{{else if .PLATFORM}}{{.PLATFORM}}{{else}}{{.LOCAL_PLATFORM}}{{end}}'
     # If a cross-platform image is provided via in the PLATFORM var, exit 1 here which bypasses tests
