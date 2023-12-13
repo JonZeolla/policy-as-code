@@ -44,7 +44,7 @@ while [[ ${valid_ip_status} -ne 0 ]]; do
     6) prompt="You provided a Cloud9 public IP address, please provide your source computer's IP. What does http://icanhazip.com/ipv4 show? " ;;
   esac
 
-  # CLIENT_IP is used by valid_ip.py
+  # CLIENT_IP is used by valid_ip.py as well as in the ansible playbook, so it must be exported
   read -r -p "${prompt}" CLIENT_IP
   export CLIENT_IP
   /usr/src/app/valid_ip.py
@@ -85,4 +85,4 @@ fi
 
 # Use a custom location for the known_hosts file based on how we've mounted the host filesystem
 export ANSIBLE_SSH_ARGS="-o UserKnownHostsFile=${KNOWN_HOSTS}"
-ansible-playbook ${ANSIBLE_CUSTOM_ARGS:-} -e "ansible_python_interpreter=/usr/bin/python3 home_dir=/home/${HOST_USER}" --inventory localhost, --user "${HOST_USER}" --private-key="${KEY_FILE}" /etc/app/policy-as-code.yml | tee -a "${LOG_FILE}"
+ansible-playbook ${ANSIBLE_CUSTOM_ARGS:-} -e "ansible_python_interpreter=/usr/bin/python3 home_dir=/home/${HOST_USER} host_user=${HOST_USER}" --inventory localhost, --user "${HOST_USER}" --private-key="${KEY_FILE}" /etc/app/policy-as-code.yml | tee -a "${LOG_FILE}"
