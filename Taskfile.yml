@@ -37,15 +37,13 @@ vars:
 silent: true
 
 tasks:
-  init-pipenv:
-    desc: Initializes the pipenv virtual environment if Pipfile.lock changes
+  init-uv:
+    desc: Initializes uv if uv.lock changes
     internal: true
     sources:
-      - Pipfile.lock
-    preconditions:
-      - which pipenv || python -m pip install --upgrade pipenv
+      - uv.lock
     cmds:
-      - pipenv install --deploy --ignore-pipfile --dev
+      - uv sync
 
   init-submodules:
     desc: >
@@ -78,18 +76,19 @@ tasks:
   init:
     desc: Initialize the repo for local use; intended to be run after git clone
     cmds:
-      - task: init-pipenv
+      - task: init-uv
       - task: init-submodules
       - task: init-install-tools
 
   lock:
-    desc: Generate a Pipfile.lock if Pipfile changed from last run
+    desc: Update uv.lock if pyproject.toml has changed
+    internal: true
     sources:
-      - Pipfile
+      - pyproject.toml
     generates:
-      - Pipfile.lock
+      - uv.lock
     cmds:
-      - pipenv lock
+      - uv lock
 
   runner-curl-install:
     desc: Install something on a GitHub Actions runner via curl
@@ -164,7 +163,7 @@ tasks:
         sh: git tag -l
       BUILD_VERSION:
         sh: |
-          pipenv run python -c '
+          uv run python -c '
           version_string = "v{{.VERSION}}"
           repo_tags = []
           {{range $tag := .REPO_TAGS | splitLines -}}
@@ -178,12 +177,14 @@ tasks:
           else:
               build_version = f"{{.VERSION}}-{{.COMMIT_HASH_SHORT}}"
           print(build_version)'
+      PYTHON_VERSION:
+        sh: cat .python-version
       IMAGE_AND_TAG: '{{.IMAGE_AND_TAG_BASE}}-{{.BUILD_VERSION}}'
       OUTPUT_FILE: '{{.IMAGE_AND_TAG | replace "/" "_" | replace "-" "_" | replace ":" "_"}}_{{.PLATFORM | replace "/" "_" | replace "," "_"}}.tar'
       DOCKER_BUILDX_FINAL_ARGS: '{{if .DOCKER_BUILDX_CUSTOM_ARGS}}{{.DOCKER_BUILDX_CUSTOM_ARGS}}{{else}}{{end}}'
       DOCKER_BUILDX_FINAL_CONTEXT: '{{.DOCKER_BUILDX_CUSTOM_CONTEXT | default "."}}'
       DOCKER_BUILDX_FINAL_TAGS: '{{if .DOCKER_BUILDX_CUSTOM_TAGS}}{{.DOCKER_BUILDX_CUSTOM_TAGS}}{{else}}--tag "{{.IMAGE_AND_TAG_BASE}}" --tag "{{.IMAGE_AND_TAG}}"{{end}}'
-      DOCKER_BUILDX_FINAL_BUILDARGS: '{{if .DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{.DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{else}}--build-arg VERSION="{{.BUILD_VERSION}}" --build-arg COMMIT_HASH="{{.COMMIT_HASH}}"{{end}}'
+      DOCKER_BUILDX_FINAL_BUILDARGS: '{{if .DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{.DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{else}}--build-arg VERSION="{{.BUILD_VERSION}}" --build-arg COMMIT_HASH="{{.COMMIT_HASH}}" --build-arg PYTHON_VERSION="{{.PYTHON_VERSION}}"{{end}}'
     cmds:
       - task: pipeline-docker-multiplatform-init
       # We only load when the provided platform equals the detected local platform. This is for two reasons:
@@ -285,9 +286,9 @@ tasks:
       # Better conditional syntax is pending https://github.com/go-task/task/issues/608
       - >
         {{if eq .VERSIONING "CalVer"}}
-          pipenv run bumpversion --config-file setup.cfg --new-version {{.RELEASE_VERSION}} unusedpart
+          uv run bumpversion --config-file setup.cfg --new-version {{.RELEASE_VERSION}} unusedpart
         {{else if eq .VERSIONING "SemVer"}}
-          pipenv run bumpversion --config-file setup.cfg {{.RELEASE_TYPE}}
+          uv run bumpversion --config-file setup.cfg {{.RELEASE_TYPE}}
         {{else}}
           echo "Invalid VERSIONING var"; exit 1
         {{end}}
@@ -308,18 +309,16 @@ tasks:
 
   update:
     desc: Update the project dev and runtime dependencies, and other misc components
-    # This is a relative path which should place us back into the calling repo, assuming this is called from a goat/Task/*/Taskfile.yml.
     cmds:
-      - task: lock
+      - uv tool upgrade --all
+      - uv lock --upgrade
+      - uv run pre-commit autoupdate --bleeding-edge --freeze
       - git submodule update --remote
-      - >
-        docker run --rm -v "${PWD}:/usr/src/app" -w /usr/src/app python:{{.PYTHON_VERSION}}-slim /bin/bash
-        -c "python3 -m pip install --upgrade pipenv &>/dev/null && pipenv update"
 
   update-demo-repos:
     desc: Update the demo repos
     cmds:
-      - "pipenv run ./hack/update-demo-repo.py --config=lab-resources/hack/update-demo-repos.yml --force-push"
+      - "uv run ./hack/update-demo-repo.py --config=lab-resources/hack/update-demo-repos.yml --force-push"
 
   pipeline-git-init:
     desc: Initialize git configs in the pipeline
@@ -357,7 +356,7 @@ tasks:
         sh: git tag -l
       BUILD_VERSION:
         sh: |
-          pipenv run python -c '
+          uv run python -c '
           version_string = "v{{.VERSION}}"
           repo_tags = []
           {{range $tag := .REPO_TAGS | splitLines -}}
@@ -414,7 +413,7 @@ tasks:
         sh: git tag -l
       BUILD_VERSION:
         sh: |
-          pipenv run python -c '
+          uv run python -c '
           version_string = "v{{.VERSION}}"
           repo_tags = []
           {{range $tag := .REPO_TAGS | splitLines -}}

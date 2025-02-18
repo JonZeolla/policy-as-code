@@ -1,0 +1,22 @@
+[project]
+name = "policy-as-code"
+version = "0.1.0"
+description = "A Policy as Code lab"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["requests"]
+
+[tool.uv.pip]
+universal = true
+generate-hashes = true
+require-hashes = true
+
+[tool.uv]
+managed = true
+dev-dependencies = [
+  "ansible-lint",
+  "bumpversion",
+  "pre-commit",
+  "pyyaml",
+]
+package = false
