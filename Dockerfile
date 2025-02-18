@@ -1,9 +1,12 @@
 # syntax=docker/dockerfile:1
 
-ARG EASY_INFRA_VERSION=2024.04.01
+ARG EASY_INFRA_VERSION=2025.01.04
 # TARGETPLATFORM is special cased by docker and doesn't need an initial ARG; if you plan to use it repeatedly you must add ARG TARGETPLATFORM between uses
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 FROM --platform=$TARGETPLATFORM seiso/easy_infra:${EASY_INFRA_VERSION}-ansible AS base
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
 # Since we use TARGETARCH below, we need to re-scope it
 ARG TARGETARCH
 
@@ -45,27 +48,29 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
  && rm get-docker.sh
 
 
-FROM base AS python
+FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS builder
 
-WORKDIR /tmp
-COPY Pipfile Pipfile.lock ./
-# Install pip -> pipenv
-RUN apt-get update \
- && apt-get install -y --no-install-recommends python3-pip \
-                                               python3-venv \
- && python3 -m venv /tmp/venv \
- && /tmp/venv/bin/pip3 install --upgrade pipenv
-# Install rntime dependencies; multi-run is used to improve caching
-RUN PIP_IGNORE_INSTALLED=1 \
-    PIPENV_VENV_IN_PROJECT=true \
-    /tmp/venv/bin/pipenv install --deploy --ignore-pipfile
+WORKDIR /app
+# Install the deps
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen \
+            --no-install-project \
+            --no-dev
 
+# Install the project with the project included
+RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=uv.lock,target=uv.lock \
+    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
+    uv sync --frozen \
+            --no-dev
 
 FROM base AS final
 
 WORKDIR /usr/src/app
 ENV PATH="/usr/src/app/.venv/bin:${PATH}"
-COPY --from=python /tmp/.venv .venv
+COPY --from=builder /app/.venv .venv
 COPY ./valid_ip.py /usr/src/app/valid_ip.py
 
 ENV ANSIBLE_ROLES_PATH="${ANSIBLE_ROLES_PATH}:/etc/app/ansible/roles/"
