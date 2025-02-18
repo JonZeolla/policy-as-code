@@ -177,12 +177,14 @@ tasks:
           else:
               build_version = f"{{.VERSION}}-{{.COMMIT_HASH_SHORT}}"
           print(build_version)'
+      PYTHON_VERSION:
+        sh: cat .python-version
       IMAGE_AND_TAG: '{{.IMAGE_AND_TAG_BASE}}-{{.BUILD_VERSION}}'
       OUTPUT_FILE: '{{.IMAGE_AND_TAG | replace "/" "_" | replace "-" "_" | replace ":" "_"}}_{{.PLATFORM | replace "/" "_" | replace "," "_"}}.tar'
       DOCKER_BUILDX_FINAL_ARGS: '{{if .DOCKER_BUILDX_CUSTOM_ARGS}}{{.DOCKER_BUILDX_CUSTOM_ARGS}}{{else}}{{end}}'
       DOCKER_BUILDX_FINAL_CONTEXT: '{{.DOCKER_BUILDX_CUSTOM_CONTEXT | default "."}}'
       DOCKER_BUILDX_FINAL_TAGS: '{{if .DOCKER_BUILDX_CUSTOM_TAGS}}{{.DOCKER_BUILDX_CUSTOM_TAGS}}{{else}}--tag "{{.IMAGE_AND_TAG_BASE}}" --tag "{{.IMAGE_AND_TAG}}"{{end}}'
-      DOCKER_BUILDX_FINAL_BUILDARGS: '{{if .DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{.DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{else}}--build-arg VERSION="{{.BUILD_VERSION}}" --build-arg COMMIT_HASH="{{.COMMIT_HASH}}"{{end}}'
+      DOCKER_BUILDX_FINAL_BUILDARGS: '{{if .DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{.DOCKER_BUILDX_CUSTOM_BUILDARGS}}{{else}}--build-arg VERSION="{{.BUILD_VERSION}}" --build-arg COMMIT_HASH="{{.COMMIT_HASH}}" --build-arg PYTHON_VERSION="{{.PYTHON_VERSION}}"{{end}}'
     cmds:
       - task: pipeline-docker-multiplatform-init
       # We only load when the provided platform equals the detected local platform. This is for two reasons:

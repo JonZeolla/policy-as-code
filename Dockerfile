@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
 ARG EASY_INFRA_VERSION=2025.01.04
+ARG PYTHON_VERSION
 # TARGETPLATFORM is special cased by docker and doesn't need an initial ARG; if you plan to use it repeatedly you must add ARG TARGETPLATFORM between uses
 # https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope
 FROM --platform=$TARGETPLATFORM seiso/easy_infra:${EASY_INFRA_VERSION}-ansible AS base
@@ -48,6 +49,7 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
  && rm get-docker.sh
 
 
+ARG PYTHON_VERSION
 FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS builder
 
 WORKDIR /app
