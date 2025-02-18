@@ -31,6 +31,8 @@ jobs:
         uses: arduino/setup-task@v2
       - name: Initialize the repo
         run: task -v init
+      - name: Lint
+        run: task -v lint
       - name: Cache the pre-commit cache
         uses: actions/cache@v4
         with:
