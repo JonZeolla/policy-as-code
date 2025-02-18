@@ -52,7 +52,10 @@ RUN ansible-galaxy collection build /etc/app/lab-resources/ansible/jonzeolla/lab
 ARG PYTHON_VERSION
 FROM ghcr.io/astral-sh/uv:python${PYTHON_VERSION}-bookworm-slim AS builder
 
-WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+
+WORKDIR /usr/src/app
 # Install the deps
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
@@ -72,7 +75,9 @@ FROM base AS final
 
 WORKDIR /usr/src/app
 ENV PATH="/usr/src/app/.venv/bin:${PATH}"
-COPY --from=builder /app/.venv .venv
+# Quick hack to ensure deps are loaded, not optimal
+ENV PYTHONPATH=/usr/src/app/.venv/lib/python${PYTHON_VERSION}/site-packages
+COPY --from=builder /usr/src/app/.venv .venv
 COPY ./valid_ip.py /usr/src/app/valid_ip.py
 
 ENV ANSIBLE_ROLES_PATH="${ANSIBLE_ROLES_PATH}:/etc/app/ansible/roles/"
